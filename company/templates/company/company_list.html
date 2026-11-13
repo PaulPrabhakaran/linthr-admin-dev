@@ -1,0 +1,233 @@
+{% extends "layouts/app_base.html" %}
+{% load static table_extras %}
+
+{% block title %}Companies · LintHR{% endblock %}
+{% block nav_companies_active %}is-active{% endblock %}
+
+{% block greet %}
+  <h1>Companies</h1>
+  <p class="sub">The full group of organizations on LintHR.</p>
+{% endblock %}
+
+{% block content %}
+{% if error %}
+  <section class="card">
+    <div class="error-state">
+      <div class="error-state-icon" aria-hidden="true">!</div>
+      <h2>Could not load companies</h2>
+      <p>{{ error }}</p>
+    </div>
+  </section>
+{% else %}
+  <div class="stack">
+    <section class="kpi-row kpi-row-3">
+      <article class="kpi">
+        <span class="kpi-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="3"/><path d="M19 8v6M16 11h6"/></svg>
+        </span>
+        <div class="kpi-body">
+          <div class="kpi-top">
+            <span class="kpi-value" data-count="{{ stats.total }}">{{ stats.total }}</span>
+          </div>
+          <span class="kpi-label">Total Companies</span>
+        </div>
+      </article>
+      <article class="kpi">
+        <span class="kpi-ico is-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg>
+        </span>
+        <div class="kpi-body">
+          <div class="kpi-top">
+            <span class="kpi-value" data-count="{{ stats.active }}">{{ stats.active }}</span>
+            <span class="delta delta-up">{{ stats.active_pct }}%</span>
+          </div>
+          <span class="kpi-label">Active</span>
+        </div>
+      </article>
+      <article class="kpi">
+        <span class="kpi-ico is-rose" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+        </span>
+        <div class="kpi-body">
+          <div class="kpi-top">
+            <span class="kpi-value" data-count="{{ stats.inactive }}">{{ stats.inactive }}</span>
+            <span class="delta delta-down">{{ stats.inactive_pct }}%</span>
+          </div>
+          <span class="kpi-label">Inactive</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="card" id="directory">
+      <div class="card-head card-head-stack">
+        <div class="card-head-row">
+          <h2>All Companies</h2>
+          <div class="panel-tools">
+            <a class="chip {% if pagination.status == 'all' %}is-on{% endif %}" href="{% table_query pagination status='all' page=1 %}">All</a>
+            <a class="chip {% if pagination.status == 'active' %}is-on{% endif %}" href="{% table_query pagination status='active' page=1 %}">Active</a>
+            <a class="chip {% if pagination.status == 'inactive' %}is-on{% endif %}" href="{% table_query pagination status='inactive' page=1 %}">Inactive</a>
+          </div>
+        </div>
+        <form class="table-search" method="get" action="">
+          {% if pagination.status and pagination.status != 'all' %}
+            <input type="hidden" name="status" value="{{ pagination.status }}">
+          {% endif %}
+          {% if pagination.ordering %}
+            <input type="hidden" name="ordering" value="{{ pagination.ordering }}">
+          {% endif %}
+          {% if pagination.page_size and pagination.page_size != 20 %}
+            <input type="hidden" name="page_size" value="{{ pagination.page_size }}">
+          {% endif %}
+          <label class="search table-search-field" for="company-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+            <input id="company-search" type="search" name="search" value="{{ pagination.search }}" placeholder="Search company, domain, or email" aria-label="Search companies">
+          </label>
+          <button type="submit" class="btn btn-sm btn-primary">Search</button>
+          {% if pagination.search %}
+            <a class="btn btn-sm" href="{% table_query pagination search='' page=1 %}">Clear</a>
+          {% endif %}
+        </form>
+      </div>
+      {% if companies %}
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>
+                  <a class="th-sort {% sort_class pagination 'name' %}" href="{% sort_query pagination 'name' %}">Company</a>
+                </th>
+                <th>
+                  <a class="th-sort {% sort_class pagination 'domain' %}" href="{% sort_query pagination 'domain' %}">Domain</a>
+                </th>
+                <th>
+                  <a class="th-sort {% sort_class pagination 'email' %}" href="{% sort_query pagination 'email' %}">Email</a>
+                </th>
+                <th>
+                  <a class="th-sort {% sort_class pagination 'active_employees' %}" href="{% sort_query pagination 'active_employees' %}">Active Employees</a>
+                </th>
+                <th>
+                  <a class="th-sort {% sort_class pagination 'registered_at' %}" href="{% sort_query pagination 'registered_at' %}">Registered At</a>
+                </th>
+                <th>
+                  <a class="th-sort {% sort_class pagination 'status' %}" href="{% sort_query pagination 'status' %}">Status</a>
+                </th>
+                <th class="actions-head">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for company in companies %}
+                <tr>
+                  <td>
+                    <div class="person">
+                      <span class="avatar">{{ company.name|default:"C"|make_list|first|upper }}</span>
+                      <div>
+                        <a href="{% url 'company:company_detail' company.id %}"><strong>{{ company.name|default:"—" }}</strong></a>
+                        <span>ID {{ company.id|default:"—" }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ company.domain|default:"—" }}</td>
+                  <td>{{ company.email|default:"—" }}</td>
+                  <td>{{ company.active_employees|default_if_none:"—" }}</td>
+                  <td>
+                    {% if company.registered_at %}
+                      <div class="stack-cell">
+                        <strong>{{ company.registered_at.date }}</strong>
+                        <span>{{ company.registered_at.time }}</span>
+                      </div>
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if company.active %}
+                      <span class="badge badge-ok" data-company-status="badge" data-company-id="{{ company.id }}">Active</span>
+                    {% else %}
+                      <span class="badge badge-off" data-company-status="badge" data-company-id="{{ company.id }}">Inactive</span>
+                    {% endif %}
+                  </td>
+                  <td class="actions">
+                    <div class="row-menu">
+                      <button
+                        type="button"
+                        class="row-menu-trigger"
+                        aria-haspopup="menu"
+                        aria-expanded="false"
+                        aria-label="Company actions"
+                      >
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <circle cx="5" cy="12" r="1.8"/>
+                          <circle cx="12" cy="12" r="1.8"/>
+                          <circle cx="19" cy="12" r="1.8"/>
+                        </svg>
+                      </button>
+                      <div class="row-menu-panel" role="menu" hidden>
+                        <a
+                          class="row-menu-item"
+                          role="menuitem"
+                          href="{% url 'company:company_detail' company.id %}"
+                        >
+                          <span class="row-menu-ico is-profile" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="3.5"/></svg>
+                          </span>
+                          Profile
+                        </a>
+                        <a
+                          class="row-menu-item"
+                          role="menuitem"
+                          href="{% url 'employee:employee_list' company.id %}"
+                        >
+                          <span class="row-menu-ico is-employees" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="3"/><path d="M19 8v6M16 11h6"/></svg>
+                          </span>
+                          Employees
+                        </a>
+                        <button
+                          type="button"
+                          class="row-menu-item js-company-active {% if company.active %}is-deactivate{% else %}is-activate{% endif %}"
+                          role="menuitem"
+                          data-company-id="{{ company.id }}"
+                          data-company-name="{{ company.name|default:'Company'|escape }}"
+                          data-active="{% if company.active %}true{% else %}false{% endif %}"
+                          data-url="{% url 'company:company_active' company.id %}"
+                        >
+                          <span class="row-menu-ico {% if company.active %}is-deactivate{% else %}is-activate{% endif %}" data-active-icon aria-hidden="true">
+                            {% if company.active %}
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M8.5 6.2a7 7 0 1 0 7 0"/></svg>
+                            {% else %}
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                            {% endif %}
+                          </span>
+                          <span data-active-label>{% if company.active %}Deactivate{% else %}Activate{% endif %}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% include "partials/table_pagination.html" %}
+      {% else %}
+        <div class="empty-state">
+          <h2>{% if pagination.search or pagination.status != 'all' %}No matching companies{% else %}No companies yet{% endif %}</h2>
+          <p>
+            {% if pagination.search or pagination.status != 'all' %}
+              Try a different search or status filter.
+            {% else %}
+              Nothing was returned from the LintHR API.
+            {% endif %}
+          </p>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block page_js %}
+{% csrf_token %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{% static 'js/company-active.js' %}?v=4" defer></script>
+{% endblock %}

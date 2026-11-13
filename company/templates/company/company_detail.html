@@ -1,0 +1,47 @@
+{% extends "layouts/app_base.html" %}
+{% load static %}
+
+{% block title %}{{ company.name|default:"Company" }} · LintHR{% endblock %}
+{% block nav_companies_active %}is-active{% endblock %}
+{% block head_actions %}
+  <a class="back-chip" href="{% url 'company:company_list' %}">
+    <span class="back-chip-ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 6 9 12l6 6"/>
+      </svg>
+    </span>
+    <span class="back-chip-label">Go back</span>
+  </a>
+{% endblock %}
+{% block greet %}
+  <h1>{{ company.name|default:"Company" }}</h1>
+{% endblock %}
+
+{% block content %}
+{% if not company %}
+  <section class="card">
+    <div class="error-state">
+      <div class="error-state-icon" aria-hidden="true">!</div>
+      <h2>Could not load company</h2>
+      <p>{{ error|default:"Company not found." }}</p>
+    </div>
+  </section>
+{% elif not stats %}
+  <section class="card">
+    <div class="error-state">
+      <div class="error-state-icon" aria-hidden="true">!</div>
+      <h2>Could not load people data</h2>
+      <p>{{ error|default:"Employee, leave, and attendance data did not come back." }}</p>
+    </div>
+  </section>
+{% else %}
+  {% url 'employee:employee_list' company_id as directory_url %}
+  {% include "company/_workforce_board.html" %}
+{% endif %}
+{% endblock %}
+
+{% block page_js %}
+{% csrf_token %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{% static 'js/company-active.js' %}?v=4" defer></script>
+{% endblock %}

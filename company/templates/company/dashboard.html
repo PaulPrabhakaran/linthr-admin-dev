@@ -1,0 +1,193 @@
+{% extends "layouts/app_base.html" %}
+
+{% block title %}Dashboard · LintHR{% endblock %}
+{% block nav_dashboard_active %}is-active{% endblock %}
+{% block greet %}
+  <h1>Good <span data-daypart>day</span>, {% if admin_user.first_name %}{{ admin_user.first_name }}{% else %}{{ admin_user.email }}{% endif %} <span class="wave" aria-hidden="true">👋</span></h1>
+  <p>Here's what's happening across your companies today.</p>
+{% endblock %}
+
+{% block content %}
+{% if error or not stats %}
+  <section class="card">
+    <div class="error-state">
+      <div class="error-state-icon" aria-hidden="true">!</div>
+      <h2>Could not load the dashboard</h2>
+      <p>{{ error|default:"Company data did not come back." }}</p>
+    </div>
+  </section>
+{% else %}
+  <div class="stack">
+    <section class="kpi-row">
+      <article class="kpi">
+        <span class="kpi-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h16M6 20V8l6-4 6 4v12M10 20v-5h4v5"/></svg>
+        </span>
+        <div class="kpi-body">
+          <div class="kpi-top">
+            <span class="kpi-value" data-count="{{ stats.total }}">{{ stats.total }}</span>
+          </div>
+          <span class="kpi-label">Total Companies</span>
+        </div>
+      </article>
+      <article class="kpi">
+        <span class="kpi-ico is-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg>
+        </span>
+        <div class="kpi-body">
+          <div class="kpi-top">
+            <span class="kpi-value" data-count="{{ stats.active }}">{{ stats.active }}</span>
+            <span class="delta delta-up">{{ stats.active_pct }}%</span>
+          </div>
+          <span class="kpi-label">Active</span>
+        </div>
+      </article>
+      <article class="kpi">
+        <span class="kpi-ico is-rose" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+        </span>
+        <div class="kpi-body">
+          <div class="kpi-top">
+            <span class="kpi-value" data-count="{{ stats.inactive }}">{{ stats.inactive }}</span>
+            <span class="delta delta-down">{{ stats.inactive_pct }}%</span>
+          </div>
+          <span class="kpi-label">Inactive</span>
+        </div>
+      </article>
+      <article class="kpi">
+        <span class="kpi-ico is-amber" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+        </span>
+        <div class="kpi-body">
+          <div class="kpi-top">
+            <span class="kpi-value" data-count="{{ stats.with_email }}">{{ stats.with_email }}</span>
+            <span class="delta delta-soft">{{ stats.email_pct }}%</span>
+          </div>
+          <span class="kpi-label">With Email</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="split">
+      <article class="card">
+        <div class="card-head">
+          <h2>Companies Added</h2>
+          <form method="get" class="week-select">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+            <label class="sr-only" for="weekRange">Company range</label>
+            <select id="weekRange" name="week" onchange="this.form.submit()">
+              <option value="this" {% if week == "this" %}selected{% endif %}>This Week</option>
+              <option value="last" {% if week == "last" %}selected{% endif %}>Last Week</option>
+            </select>
+          </form>
+        </div>
+        <div class="chart-box">
+          <canvas data-area-chart data-source="companyChartData" aria-label="Companies added this week"></canvas>
+        </div>
+        {{ stats.chart|json_script:"companyChartData" }}
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <h2>Company Status</h2>
+        </div>
+        <div class="donut-layout">
+          <div class="donut-stage">
+            <canvas
+              data-status-chart
+              data-present="{{ stats.ready }}"
+              data-leave="{{ stats.no_email }}"
+              data-absent="{{ stats.inactive }}"
+              aria-label="Active, missing email, and inactive companies"
+            ></canvas>
+            <div class="donut-center">
+              <strong data-count="{{ stats.total }}">{{ stats.total }}</strong>
+              <span>Companies</span>
+            </div>
+          </div>
+          <ul class="legend">
+            <li><i class="swatch-present"></i><span>Active</span><b>{{ stats.ready_pct }}%</b></li>
+            <li><i class="swatch-leave"></i><span>No Email</span><b>{{ stats.no_email_pct }}%</b></li>
+            <li><i class="swatch-absent"></i><span>Inactive</span><b>{{ stats.inactive_pct }}%</b></li>
+          </ul>
+        </div>
+      </article>
+    </section>
+
+    <section class="triple">
+      <article class="card">
+        <div class="card-head">
+          <h2>Companies by Domain</h2>
+          <a class="card-link" href="{% url 'company:company_list' %}">View All →</a>
+        </div>
+        {% if stats.domains %}
+          <div class="bar-list">
+            {% for row in stats.domains %}
+              <div class="bar-row">
+                <span class="bar-ico tone-{{ forloop.counter }}" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M3 12h18M12 4a14 14 0 0 1 0 16"/></svg>
+                </span>
+                <div>
+                  <div class="bar-top"><strong>{{ row.name }}</strong><span>{{ row.count }}</span></div>
+                  <div class="bar-track"><i style="width: {{ row.pct }}%"></i></div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="muted">No domains yet.</p>
+        {% endif %}
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <h2>Recent Companies</h2>
+          <a class="card-link" href="{% url 'company:company_list' %}">View All →</a>
+        </div>
+        {% if stats.activities %}
+          <ul class="feed">
+            {% for item in stats.activities %}
+              <li>
+                <span class="feed-ico {% if item.kind == 'checkin' %}is-green{% else %}is-rose{% endif %}" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h16M6 20V8l6-4 6 4v12"/></svg>
+                </span>
+                <div>
+                  <strong>{{ item.title }}</strong>
+                  <span>{{ item.when }}</span>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="muted">No companies yet.</p>
+        {% endif %}
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <h2>Needs Attention</h2>
+          <a class="card-link" href="{% url 'company:company_list' %}">View All →</a>
+        </div>
+        {% if stats.attention %}
+          <ul class="leave-list">
+            {% for item in stats.attention %}
+              <li>
+                <div class="person">
+                  <span class="avatar av-{{ forloop.counter }}">{{ item.initials }}</span>
+                  <div>
+                    <a href="{% url 'company:company_detail' item.id %}"><strong>{{ item.name }}</strong></a>
+                    <span>{{ item.role }}</span>
+                  </div>
+                </div>
+                <span class="when">{{ item.when }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="muted">Every company is active and has an email.</p>
+        {% endif %}
+      </article>
+    </section>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block body_class %}auth-body{% endblock %}
+
+{% block body %}
+<div class="auth-shell">
+  <aside class="auth-brand-panel">
+    <div class="auth-brand-glow auth-brand-glow-a" aria-hidden="true"></div>
+    <div class="auth-brand-glow auth-brand-glow-b" aria-hidden="true"></div>
+    <div class="auth-brand-glow auth-brand-glow-c" aria-hidden="true"></div>
+    <div class="auth-brand-grid" aria-hidden="true"></div>
+    <div class="auth-brand-ring auth-brand-ring-a" aria-hidden="true"></div>
+    <div class="auth-brand-ring auth-brand-ring-b" aria-hidden="true"></div>
+
+    <div class="auth-brand-inner">
+      <a class="auth-brand-mark" href="{% url 'accounts:login' %}">
+        <span class="auth-brand-mark-badge">LH</span>
+        LintHR <span>Admin</span>
+      </a>
+
+      <div class="auth-brand-hero">
+        <p class="auth-brand-eyebrow">LintCloud platform</p>
+        <h1>{% block auth_hero_title %}Admin console for LintCloud{% endblock %}</h1>
+        <p>{% block auth_hero_copy %}Manage companies and employees across your LintHR platform with a secure Google sign-in.{% endblock %}</p>
+
+        <ul class="auth-feature-list">
+          <li>
+            <div class="auth-feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div>
+              <strong>Secure Google SSO</strong>
+              <span>@lintcloud.com accounts only</span>
+            </div>
+          </li>
+          <li>
+            <div class="auth-feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+            </div>
+            <div>
+              <strong>Live command center</strong>
+              <span>KPIs, charts, and org directories</span>
+            </div>
+          </li>
+          <li>
+            <div class="auth-feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            <div>
+              <strong>Synced from LintHR</strong>
+              <span>Real-time data from the platform API</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <p class="auth-brand-footer">© LintCloud · LintHR Admin</p>
+    </div>
+  </aside>
+
+  <section class="auth-form-panel">
+    <div class="auth-form-orb auth-form-orb-a" aria-hidden="true"></div>
+    <div class="auth-form-orb auth-form-orb-b" aria-hidden="true"></div>
+    <div class="auth-form-orb auth-form-orb-c" aria-hidden="true"></div>
+    <div class="auth-form-dots" aria-hidden="true"></div>
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li class="message message-{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </section>
+</div>
+{% endblock %}

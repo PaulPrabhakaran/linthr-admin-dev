@@ -1,0 +1,361 @@
+<div class="stack">
+  {% if stats.warnings %}
+    <p class="dash-note">Some company data could not be read.</p>
+  {% endif %}
+
+  <section class="kpi-row">
+    <article class="kpi">
+      <span class="kpi-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="3"/><path d="M19 8v6M22 11h-6"/></svg>
+      </span>
+      <div class="kpi-body">
+        <div class="kpi-top">
+          <span class="kpi-value" data-count="{{ stats.total_employees }}">{{ stats.total_employees }}</span>
+          {% if stats.employee_delta != None %}
+            <span class="delta {% if stats.employee_delta >= 0 %}delta-up{% else %}delta-down{% endif %}">{% if stats.employee_delta >= 0 %}↑ +{{ stats.employee_delta }}%{% else %}↓ {{ stats.employee_delta }}%{% endif %}</span>
+          {% endif %}
+        </div>
+        <span class="kpi-label">Total Employees</span>
+      </div>
+    </article>
+    <article class="kpi">
+      <span class="kpi-ico is-green" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 11.2a1.6 1.6 0 0 1 1.6 1.6c0 2-1.1 3.2-1.6 5"/><path d="M8.8 10.4a3.6 3.6 0 0 1 6.4 1.8c0 1.1-.3 2-.7 2.9"/><path d="M6.4 9a6.2 6.2 0 0 1 10.8 2.4c.3.9.4 1.8.4 2.8"/><path d="M5 7.6A8.4 8.4 0 0 1 18.4 12"/><path d="M9.2 17.2c.3.8.6 1.5.8 2.2"/></svg>
+      </span>
+      <div class="kpi-body">
+        <div class="kpi-top">
+          <span class="kpi-value" data-count="{{ stats.present_today }}">{{ stats.present_today }}</span>
+          {% if stats.present_delta != None %}
+            <span class="delta {% if stats.present_delta >= 0 %}delta-up{% else %}delta-down{% endif %}">{% if stats.present_delta >= 0 %}↑ +{{ stats.present_delta }}%{% else %}↓ {{ stats.present_delta }}%{% endif %}</span>
+          {% endif %}
+        </div>
+        <span class="kpi-label">Present Today</span>
+      </div>
+    </article>
+    <article class="kpi">
+      <span class="kpi-ico is-rose" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+      </span>
+      <div class="kpi-body">
+        <div class="kpi-top">
+          <span class="kpi-value" data-count="{{ stats.on_leave }}">{{ stats.on_leave }}</span>
+          {% if stats.leave_delta != None %}
+            <span class="delta {% if stats.leave_delta >= 0 %}delta-up{% else %}delta-down{% endif %}">{% if stats.leave_delta >= 0 %}↑ +{{ stats.leave_delta }}%{% else %}↓ {{ stats.leave_delta }}%{% endif %}</span>
+          {% endif %}
+        </div>
+        <span class="kpi-label">On Leave</span>
+      </div>
+    </article>
+    <article class="kpi">
+      <span class="kpi-ico is-amber" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg>
+      </span>
+      <div class="kpi-body">
+        <div class="kpi-top">
+          <span class="kpi-value" data-count="{{ stats.pending_requests }}">{{ stats.pending_requests }}</span>
+        </div>
+        <span class="kpi-label">Pending Requests</span>
+      </div>
+    </article>
+  </section>
+
+  {% with profile=company_profile.profile %}
+  <section class="card profile-hero">
+    <div class="profile-hero-top">
+      <div class="profile-hero-id">
+        <div class="profile-kicker">Company profile</div>
+        <div class="profile-hero-brand">
+          {% if profile.light_logo_image or profile.dark_logo_image %}
+            <img class="profile-mark" src="{{ profile.light_logo_image|default:profile.dark_logo_image }}" alt="">
+          {% else %}
+            <span class="profile-mark" aria-hidden="true">{{ company.name|default:"C"|make_list|first|upper }}</span>
+          {% endif %}
+          <div class="profile-hero-copy">
+            <div class="profile-name-row">
+              <h2>{{ profile.full_name|default:company.name|default:"Company" }}</h2>
+              {% if company.active %}
+                <span class="status-pill is-live" data-company-status="pill" data-company-id="{{ company.id }}"><i></i>Active</span>
+              {% else %}
+                <span class="status-pill" data-company-status="pill" data-company-id="{{ company.id }}">Inactive</span>
+              {% endif %}
+              <button
+                type="button"
+                class="btn btn-sm {% if company.active %}btn-danger{% else %}btn-success{% endif %} js-company-active"
+                data-company-id="{{ company.id }}"
+                data-company-name="{{ company.name|default:'Company'|escape }}"
+                data-active="{% if company.active %}true{% else %}false{% endif %}"
+                data-url="{% url 'company:company_active' company.id %}"
+              >{% if company.active %}Deactivate{% else %}Activate{% endif %}</button>
+            </div>
+            {% if company.domain %}
+              <p class="profile-meta">Tenant domain <strong>{{ company.domain }}</strong></p>
+            {% elif profile.about %}
+              <p class="profile-meta">{{ profile.about }}</p>
+            {% endif %}
+            <div class="profile-contact-row">
+              {% if profile.contact_email or company.email %}
+                <a class="contact-pill" href="mailto:{{ profile.contact_email|default:company.email }}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>
+                  <span>{{ profile.contact_email|default:company.email }}</span>
+                </a>
+              {% endif %}
+              {% if profile.phone_display %}
+                <span class="contact-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M7 3h3l1.5 4-2 1.5a12 12 0 0 0 5 5L16 12l4 1.5V17a2 2 0 0 1-2 2A14 14 0 0 1 5 5a2 2 0 0 1 2-2Z"/></svg>
+                  <span>{{ profile.phone_display }}</span>
+                </span>
+              {% endif %}
+              {% if profile.place_label %}
+                <span class="contact-pill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.2"/></svg>
+                  <span>{{ profile.place_label }}</span>
+                </span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-campus" aria-hidden="true">
+        <svg viewBox="0 0 280 170" fill="none">
+          <ellipse cx="150" cy="148" rx="92" ry="14" fill="#efe4f8"/>
+          <path d="M48 118c18-46 42-72 78-78 28-4 58 10 86 42 10 12 8 28-6 36-22 12-52 8-78 2-30-7-58-2-80-2Z" fill="url(#campusBlob)"/>
+          <path d="M78 128V78l46-18 46 18v50" fill="#f7f4fb"/>
+          <path d="M78 78l46-18 46 18" fill="#efe6f6"/>
+          <rect x="92" y="86" width="18" height="14" rx="2" fill="#d8c4ee"/>
+          <rect x="116" y="86" width="18" height="14" rx="2" fill="#c9b0e6"/>
+          <rect x="140" y="86" width="18" height="14" rx="2" fill="#d8c4ee"/>
+          <rect x="92" y="106" width="18" height="14" rx="2" fill="#c9b0e6"/>
+          <rect x="140" y="106" width="18" height="14" rx="2" fill="#c9b0e6"/>
+          <rect x="114" y="112" width="22" height="16" rx="2" fill="#b794e0"/>
+          <path d="M168 128V92h28v36" fill="#f3eef8"/>
+          <rect x="174" y="100" width="8" height="10" rx="1.5" fill="#d8c4ee"/>
+          <rect x="186" y="100" width="8" height="10" rx="1.5" fill="#c9b0e6"/>
+          <rect x="174" y="114" width="8" height="10" rx="1.5" fill="#c9b0e6"/>
+          <path d="M62 128c8-22 16-34 28-34 8 0 12 6 14 14" stroke="#7dce8a" stroke-width="8" stroke-linecap="round"/>
+          <circle cx="78" cy="86" r="16" fill="#5fbf78"/>
+          <circle cx="96" cy="92" r="12" fill="#8ed99a"/>
+          <circle cx="214" cy="96" r="18" fill="#4caf6a"/>
+          <circle cx="232" cy="108" r="13" fill="#7dce8a"/>
+          <path d="M206 128c6-16 12-24 20-24" stroke="#6fbf7e" stroke-width="6" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="campusBlob" x1="70" y1="40" x2="210" y2="140" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#f6e9fb"/>
+              <stop offset="1" stop-color="#ead7f6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    </div>
+
+    <div class="profile-footprint" aria-label="Company footprint">
+      <div class="profile-metric">
+        <strong class="profile-metric-value" data-count="{{ company_profile.branch_count|default:0 }}">{{ company_profile.branch_count|default:0 }}</strong>
+        <span class="profile-metric-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 20h16M6 20V8l6-4 6 4v12M10 20v-5h4v5"/></svg>
+          Branches
+        </span>
+      </div>
+      <div class="profile-metric">
+        <strong class="profile-metric-value" data-count="{{ company_profile.department_count|default:0 }}">{{ company_profile.department_count|default:0 }}</strong>
+        <span class="profile-metric-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 8h16M4 12h16M4 16h10"/><path d="M7 5h10v3H7z"/></svg>
+          Departments
+        </span>
+      </div>
+      <div class="profile-metric">
+        <strong class="profile-metric-value" data-count="{{ company_profile.work_schedule_count|default:0 }}">{{ company_profile.work_schedule_count|default:0 }}</strong>
+        <span class="profile-metric-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg>
+          Work Schedules
+        </span>
+      </div>
+      <div class="profile-metric">
+        <strong class="profile-metric-value" data-count="{{ company_profile.holiday_count|default:0 }}">{{ company_profile.holiday_count|default:0 }}</strong>
+        <span class="profile-metric-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/><path d="M9 14h.01M12 14h.01M15 14h.01M9 17h.01M12 17h.01"/></svg>
+          Holidays
+        </span>
+      </div>
+    </div>
+  </section>
+  {% endwith %}
+
+  <section class="split">
+    <article class="card org-overview">
+      <div class="card-head">
+        <div>
+          <h2>Organization Overview</h2>
+          <p class="card-sub">Male and female headcount, and how the workforce has changed over recent months.</p>
+        </div>
+      </div>
+
+      <div class="org-overview-top">
+        <div class="org-people" aria-hidden="true">
+          <svg viewBox="0 0 140 120" fill="none">
+            <path d="M18 92c8-28 22-46 48-50 22-3 42 8 58 28 6 8 4 18-6 24-16 8-36 6-54 2-20-5-36-2-46-4Z" fill="url(#peopleBlob)"/>
+            <circle cx="70" cy="48" r="16" fill="#c084fc"/>
+            <path d="M46 92c2-16 12-24 24-24s22 8 24 24" fill="#a855f7"/>
+            <circle cx="42" cy="56" r="12" fill="#d8b4fe"/>
+            <path d="M24 96c1-12 8-18 18-18 6 0 11 3 14 8" fill="#c4b5fd"/>
+            <circle cx="98" cy="58" r="12" fill="#e9d5ff"/>
+            <path d="M84 96c1-12 8-18 18-18 7 0 12 3 15 8" fill="#ddd6fe"/>
+            <defs>
+              <linearGradient id="peopleBlob" x1="30" y1="30" x2="120" y2="100" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#f5e9ff"/>
+                <stop offset="1" stop-color="#eadcff"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="org-mini-grid">
+          <article class="org-mini is-blue">
+            <span class="org-mini-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="14.5" r="4.5"/><path d="M13.5 11 19 5.5M14.5 5.5H19V10"/></svg>
+            </span>
+            <div>
+              <strong data-count="{{ company_profile.male_employee_count|default:0 }}">{{ company_profile.male_employee_count|default:0 }}</strong>
+              <span>Male Employees</span>
+            </div>
+          </article>
+          <article class="org-mini is-rose">
+            <span class="org-mini-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="9" r="4.5"/><path d="M12 13.5V20M9 17h6"/></svg>
+            </span>
+            <div>
+              <strong data-count="{{ company_profile.female_employee_count|default:0 }}">{{ company_profile.female_employee_count|default:0 }}</strong>
+              <span>Female Employees</span>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <div class="org-trend">
+        <h3>Employee Trend</h3>
+        <div class="chart-box org-trend-chart">
+          <canvas data-area-chart data-source="employeeTrendData" aria-label="Employee headcount over the last six months"></canvas>
+        </div>
+      </div>
+      {{ company_profile.employee_trend|json_script:"employeeTrendData" }}
+    </article>
+
+    <article class="card">
+      <div class="card-head">
+        <h2>Employee Status</h2>
+      </div>
+      <div class="donut-layout is-status">
+        <div class="donut-stage">
+          <canvas
+            data-status-chart
+            data-present="{{ stats.present_today }}"
+            data-leave="{{ stats.on_leave }}"
+            data-absent="{{ stats.absent }}"
+            aria-label="Present, on leave, and absent employees"
+          ></canvas>
+          <div class="donut-center">
+            <strong data-count="{{ stats.total_employees }}">{{ stats.total_employees }}</strong>
+            <span>Employees</span>
+          </div>
+        </div>
+        <ul class="legend">
+          <li><i class="swatch-present"></i><span>Present</span><b>{{ stats.present_pct }}%</b></li>
+          <li><i class="swatch-leave"></i><span>On Leave</span><b>{{ stats.leave_pct }}%</b></li>
+          <li><i class="swatch-absent"></i><span>Absent</span><b>{{ stats.absent_pct }}%</b></li>
+        </ul>
+      </div>
+    </article>
+  </section>
+
+  <section class="triple">
+    <article class="card">
+      <div class="card-head">
+        <h2>Department Wise Employees</h2>
+        <a class="card-link" href="{{ directory_url }}">View All →</a>
+      </div>
+      {% if stats.departments %}
+        <div class="bar-list">
+          {% for row in stats.departments %}
+            <div class="bar-row">
+              <span class="bar-ico tone-{{ forloop.counter }}" aria-hidden="true">
+                {% if forloop.counter == 1 %}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13 6l-2 12"/></svg>
+                {% elif forloop.counter == 2 %}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h16M6 20V8l6-4 6 4v12M10 20v-5h4v5"/></svg>
+                {% elif forloop.counter == 3 %}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10v8a2 2 0 0 0 2 2h2V10H4Zm6 4v6h4v-6h-4Zm6-7v13h2a2 2 0 0 0 2-2V7h-4Z"/></svg>
+                {% elif forloop.counter == 4 %}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="3"/><path d="M19 8v6M22 11h-6"/></svg>
+                {% else %}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>
+                {% endif %}
+              </span>
+              <div>
+                <div class="bar-top"><strong>{{ row.name }}</strong><span>{{ row.count }}</span></div>
+                <div class="bar-track"><i style="width: {{ row.pct }}%"></i></div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted">No departments yet.</p>
+      {% endif %}
+    </article>
+
+    <article class="card">
+      <div class="card-head">
+        <h2>Recent Activities</h2>
+        <a class="card-link" href="{{ directory_url }}">View All →</a>
+      </div>
+      {% if stats.activities %}
+        <ul class="feed">
+          {% for item in stats.activities %}
+            <li>
+              <span class="feed-ico {% if item.kind == 'checkin' %}is-green{% elif item.kind == 'leave' %}is-violet{% elif item.kind == 'payroll' %}is-amber{% else %}is-blue{% endif %}" aria-hidden="true">
+                {% if item.kind == "checkin" %}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="m8.5 12.5 2.2 2.2 4.8-5"/></svg>
+                {% elif item.kind == "leave" %}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>
+                {% elif item.kind == "payroll" %}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h4"/></svg>
+                {% else %}
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="3"/><path d="M19 8v6M22 11h-6"/></svg>
+                {% endif %}
+              </span>
+              <div>
+                <strong>{{ item.title }}</strong>
+                <span>{{ item.when }}</span>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">No recent activity yet.</p>
+      {% endif %}
+    </article>
+
+    <article class="card">
+      <div class="card-head">
+        <h2>Upcoming Leaves</h2>
+        <a class="card-link" href="{{ directory_url }}">View All →</a>
+      </div>
+      {% if stats.upcoming_leaves %}
+        <ul class="leave-list">
+          {% for leave in stats.upcoming_leaves %}
+            <li>
+              <div class="person">
+                <span class="avatar av-{{ forloop.counter }}">{{ leave.initials }}</span>
+                <div>
+                  <strong>{{ leave.name }}</strong>
+                  <span>{{ leave.role }}</span>
+                </div>
+              </div>
+              <span class="when">{{ leave.when }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">No upcoming leave.</p>
+      {% endif %}
+    </article>
+  </section>
+</div>

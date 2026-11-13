@@ -1,0 +1,57 @@
+{% extends "layouts/auth_base.html" %}
+
+{% block title %}Sign up · LintHR Admin{% endblock %}
+
+{% block auth_hero_title %}Join the admin team{% endblock %}
+{% block auth_hero_copy %}Register with your @lintcloud.com Google account. An administrator will verify you before you can access company data.{% endblock %}
+
+{% block content %}
+<section class="auth-card">
+  <p class="auth-card-kicker">Get started</p>
+  <h1>Sign up</h1>
+  <p class="muted">Only @lintcloud.com Google accounts can register. An admin must verify your account after signup.</p>
+
+  {% if google_client_id %}
+    <div id="google-btn" class="google-btn-wrap"></div>
+    <form id="google-auth-form" method="post" action="{% url 'accounts:signup' %}" class="hidden-form">
+      {% csrf_token %}
+      <input type="hidden" name="id_token" id="id_token">
+    </form>
+  {% else %}
+    <p class="error-text" style="margin-top: 1.25rem;">GOOGLE_CLIENT_ID is not configured.</p>
+  {% endif %}
+
+  <p class="auth-switch">
+    Already have an account? <a href="{% url 'accounts:login' %}">Sign in</a>
+  </p>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% if google_client_id %}
+<script>
+  function handleGoogleCredential(response) {
+    document.getElementById('id_token').value = response.credential;
+    document.getElementById('google-auth-form').submit();
+  }
+
+  function initGoogleSignIn() {
+    google.accounts.id.initialize({
+      client_id: "{{ google_client_id }}",
+      callback: handleGoogleCredential,
+      auto_select: false,
+      hd: "lintcloud.com",
+      // Avoid popup + window.opener.postMessage (breaks under Chrome COOP).
+      use_fedcm_for_button: true
+    });
+    const btnHost = document.getElementById('google-btn');
+    const btnWidth = Math.min(360, Math.floor(btnHost.clientWidth) || 320);
+    google.accounts.id.renderButton(
+      btnHost,
+      { theme: 'outline', size: 'large', text: 'signup_with', width: btnWidth, shape: 'pill' }
+    );
+  }
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer onload="initGoogleSignIn()"></script>
+{% endif %}
+{% endblock %}

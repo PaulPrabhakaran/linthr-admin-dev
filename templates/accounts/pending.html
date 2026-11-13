@@ -1,0 +1,29 @@
+{% extends "layouts/auth_base.html" %}
+
+{% block title %}Pending verification · LintHR Admin{% endblock %}
+
+{% block auth_hero_title %}Almost there{% endblock %}
+{% block auth_hero_copy %}Your account is waiting for verification. Once approved, you can manage companies and employees across LintHR.{% endblock %}
+
+{% block content %}
+<section class="auth-card">
+  <div class="auth-status-icon is-pending" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 7v5l3 2"/>
+    </svg>
+    <span class="auth-status-pulse"></span>
+  </div>
+  <h1>Pending verification</h1>
+  <p>
+    Your account (<strong>{{ admin_user.email }}</strong>) has been created but is not verified yet.
+  </p>
+  <div class="auth-contact-callout" role="status">
+    <span class="auth-contact-dot" aria-hidden="true"></span>
+    <p>Please contact Administrator</p>
+  </div>
+  <div class="action-row">
+    <a class="btn" href="{% url 'accounts:logout' %}">Sign out</a>
+  </div>
+</section>
+{% endblock %}

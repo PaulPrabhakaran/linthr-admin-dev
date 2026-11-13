@@ -1,0 +1,262 @@
+{% extends "layouts/app_base.html" %}
+{% load table_extras %}
+
+{% block title %}Employees · LintHR{% endblock %}
+{% block nav_companies_active %}is-active{% endblock %}
+
+{% block head_actions %}
+  <a class="back-chip" href="{% url 'company:company_list' %}">
+    <span class="back-chip-ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 6 9 12l6 6"/>
+      </svg>
+    </span>
+    <span class="back-chip-label">Go back</span>
+  </a>
+{% endblock %}
+
+{% block greet %}
+  <h1>{{ company.name|default:"Company" }} people</h1>
+{% endblock %}
+
+{% block content %}
+{% if error %}
+  <section class="card">
+    <div class="error-state">
+      <div class="error-state-icon" aria-hidden="true">!</div>
+      <h2>Could not load employees</h2>
+      <p>{{ error }}</p>
+    </div>
+  </section>
+{% else %}
+  <div class="stack">
+    <section class="kpi-row">
+      <article class="kpi">
+        <span class="kpi-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="3"/><path d="M19 8v6M16 11h6"/></svg>
+        </span>
+        <div class="kpi-body">
+          <div class="kpi-top"><span class="kpi-value" data-count="{{ people.total }}">{{ people.total }}</span></div>
+          <span class="kpi-label">Total employees</span>
+        </div>
+      </article>
+      <article class="kpi">
+        <span class="kpi-ico is-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg>
+        </span>
+        <div class="kpi-body">
+          <div class="kpi-top">
+            <span class="kpi-value" data-count="{{ people.active }}">{{ people.active }}</span>
+            <span class="delta delta-up">{{ people.active_pct }}%</span>
+          </div>
+          <span class="kpi-label">Active</span>
+        </div>
+      </article>
+      <article class="kpi">
+        <span class="kpi-ico is-rose" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M8 12h8"/></svg>
+        </span>
+        <div class="kpi-body">
+          <div class="kpi-top">
+            <span class="kpi-value" data-count="{{ people.inactive }}">{{ people.inactive }}</span>
+            <span class="delta delta-down">{{ people.inactive_pct }}%</span>
+          </div>
+          <span class="kpi-label">Inactive</span>
+        </div>
+      </article>
+      <article class="kpi">
+        <span class="kpi-ico is-amber" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 7h8M8 12h8M8 17h5"/></svg>
+        </span>
+        <div class="kpi-body">
+          <div class="kpi-top"><span class="kpi-value" data-count="{{ people.roles }}">{{ people.roles }}</span></div>
+          <span class="kpi-label">Roles</span>
+        </div>
+      </article>
+    </section>
+
+    {% if people.total %}
+      <section class="split split-even">
+        <article class="card role-board">
+          <div class="card-head">
+            <h2>Roles</h2>
+            <a class="card-link" href="{% url 'company:company_detail' company_id %}">Company profile</a>
+          </div>
+          {% if people.role_rows %}
+            <ul class="role-rank">
+              {% for row in people.role_rows %}
+                <li class="role-rank-item">
+                  <span class="role-rank-index" aria-hidden="true">{{ forloop.counter }}</span>
+                  <div class="role-rank-body">
+                    <div class="role-rank-top">
+                      <strong>{{ row.label }}</strong>
+                      <span class="role-rank-count">{{ row.value }}</span>
+                    </div>
+                    <div class="role-rank-meta">
+                      <div class="role-rank-track" aria-hidden="true"><i style="width: {{ row.pct }}%"></i></div>
+                      <span>{{ row.share|default:0 }}% of people</span>
+                    </div>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="muted">No roles assigned yet.</p>
+          {% endif %}
+        </article>
+        <article class="card">
+          <div class="card-head"><h2>Employee status</h2></div>
+          <div class="donut-layout">
+            <div class="donut-stage">
+              <canvas data-status-chart data-active="{{ people.active }}" data-inactive="{{ people.inactive }}" aria-label="Active and inactive employees"></canvas>
+              <div class="donut-center">
+                <strong>{{ people.total }}</strong>
+                <span>Employees</span>
+              </div>
+            </div>
+            <ul class="legend">
+              <li><i style="background:#a02880"></i><span>Active</span><b>{{ people.active_pct }}%</b></li>
+              <li><i style="background:#f0c6e4"></i><span>Inactive</span><b>{{ people.inactive_pct }}%</b></li>
+            </ul>
+          </div>
+        </article>
+      </section>
+
+      <section class="card org-pulse">
+        <div class="card-head">
+          <h2>Organization pulse</h2>
+          <span class="live-tag">{{ company.name|default:"Company" }}</span>
+        </div>
+        <div class="org-pulse-grid">
+          <article class="org-stat org-stat-dept">
+            <span class="org-stat-glow" aria-hidden="true"></span>
+            <span class="org-stat-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h16M6 20V8l6-4 6 4v12M10 20v-5h4v5"/></svg>
+            </span>
+            <div class="org-stat-body">
+              <span class="org-stat-value" data-count="{{ people.departments }}">{{ people.departments }}</span>
+              <span class="org-stat-label">Total departments</span>
+              <span class="org-stat-hint">Org units configured</span>
+            </div>
+          </article>
+          <article class="org-stat org-stat-role">
+            <span class="org-stat-glow" aria-hidden="true"></span>
+            <span class="org-stat-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 7v4c0 5 3.4 8.4 8 10 4.6-1.6 8-5 8-10V7l-8-4Z"/><path d="M9.5 12.2 11.2 14l3.5-3.8"/></svg>
+            </span>
+            <div class="org-stat-body">
+              <span class="org-stat-value" data-count="{{ people.roles }}">{{ people.roles }}</span>
+              <span class="org-stat-label">Total roles</span>
+              <span class="org-stat-hint">Permission roles defined</span>
+            </div>
+          </article>
+          <article class="org-stat org-stat-schedule">
+            <span class="org-stat-glow" aria-hidden="true"></span>
+            <span class="org-stat-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg>
+            </span>
+            <div class="org-stat-body">
+              <span class="org-stat-value" data-count="{{ people.work_schedules }}">{{ people.work_schedules }}</span>
+              <span class="org-stat-label">Work schedules</span>
+              <span class="org-stat-hint">Active shift templates</span>
+            </div>
+          </article>
+        </div>
+      </section>
+    {% endif %}
+
+    <section class="card" id="directory">
+      <div class="card-head card-head-stack">
+        <div class="card-head-row">
+          <h2>Employee roster</h2>
+          <div class="panel-tools">
+            <a class="chip {% if pagination.status == 'all' %}is-on{% endif %}" href="{% table_query pagination status='all' page=1 %}">All</a>
+            <a class="chip {% if pagination.status == 'active' %}is-on{% endif %}" href="{% table_query pagination status='active' page=1 %}">Active</a>
+            <a class="chip {% if pagination.status == 'inactive' %}is-on{% endif %}" href="{% table_query pagination status='inactive' page=1 %}">Inactive</a>
+            <a class="btn btn-sm" href="{% url 'company:company_detail' company_id %}">Company</a>
+          </div>
+        </div>
+        <form class="table-search" method="get" action="">
+          {% if pagination.status and pagination.status != 'all' %}
+            <input type="hidden" name="status" value="{{ pagination.status }}">
+          {% endif %}
+          {% if pagination.ordering %}
+            <input type="hidden" name="ordering" value="{{ pagination.ordering }}">
+          {% endif %}
+          {% if pagination.page_size and pagination.page_size != 20 %}
+            <input type="hidden" name="page_size" value="{{ pagination.page_size }}">
+          {% endif %}
+          <label class="search table-search-field" for="employee-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+            <input id="employee-search" type="search" name="search" value="{{ pagination.search }}" placeholder="Search name, email, or role" aria-label="Search employees">
+          </label>
+          <button type="submit" class="btn btn-sm btn-primary">Search</button>
+          {% if pagination.search %}
+            <a class="btn btn-sm" href="{% table_query pagination search='' page=1 %}">Clear</a>
+          {% endif %}
+        </form>
+      </div>
+      {% if employees %}
+        <div class="data-table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>
+                  <a class="th-sort {% sort_class pagination 'name' %}" href="{% sort_query pagination 'name' %}">Person</a>
+                </th>
+                <th>
+                  <a class="th-sort {% sort_class pagination 'email' %}" href="{% sort_query pagination 'email' %}">Email</a>
+                </th>
+                <th>
+                  <a class="th-sort {% sort_class pagination 'role' %}" href="{% sort_query pagination 'role' %}">Role</a>
+                </th>
+                <th>
+                  <a class="th-sort {% sort_class pagination 'status' %}" href="{% sort_query pagination 'status' %}">Status</a>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for employee in employees %}
+                {% with name=employee.name|default:employee.first_name|default:"—" role=employee.role|default:"—" %}
+                  <tr>
+                    <td>
+                      <div class="person">
+                        <span class="avatar">{{ name|make_list|first|upper }}</span>
+                        <div>
+                          <strong>{{ name }}</strong>
+                          <span>{{ role }}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{ employee.email|default:"—" }}</td>
+                    <td>{{ role }}</td>
+                    <td>
+                      {% if employee.active or employee.is_active %}
+                        <span class="badge badge-ok">Active</span>
+                      {% else %}
+                        <span class="badge badge-off">Inactive</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endwith %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% include "partials/table_pagination.html" %}
+      {% else %}
+        <div class="empty-state">
+          <h2>{% if pagination.search or pagination.status != 'all' %}No matching employees{% else %}No employees found{% endif %}</h2>
+          <p>
+            {% if pagination.search or pagination.status != 'all' %}
+              Try a different search or status filter.
+            {% else %}
+              No employees were returned for this company.
+            {% endif %}
+          </p>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+{% endif %}
+{% endblock %}

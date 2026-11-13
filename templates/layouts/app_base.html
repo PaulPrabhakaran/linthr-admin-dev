@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body_class %}app-body{% endblock %}
+
+{% block body %}
+<div class="app-shell">
+  <div class="sidebar-backdrop" data-sidebar-close aria-hidden="true"></div>
+
+  <aside class="sidebar" id="app-sidebar" aria-label="Main navigation">
+    <div class="sidebar-head">
+      <a class="brand" href="{% url 'dashboard' %}">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M7 17V8.5A1.5 1.5 0 0 1 8.5 7H15" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M10 17V11.5A1.5 1.5 0 0 1 11.5 10H18" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M13 17v-3.5A1.5 1.5 0 0 1 14.5 12H21" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <strong>LintHR</strong>
+          <small>HRMS Platform</small>
+        </span>
+      </a>
+      <button type="button" class="collapse-btn" data-sidebar-collapse aria-label="Collapse sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 6-6 6 6 6"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      {% if admin_user and admin_user.is_verified %}
+        <a href="{% url 'dashboard' %}" class="nav-link {% block nav_dashboard_active %}{% endblock %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="{% url 'company:company_list' %}" class="nav-link {% block nav_companies_active %}{% endblock %}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="3.2"/><path d="M20 8v6M17 11h6"/></svg>
+          <span>Companies</span>
+        </a>
+      {% endif %}
+    </nav>
+
+    {% block sidebar_promo %}
+    <div class="promo promo-upgrade">
+      <div class="promo-rocket" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none">
+          <path d="M32 6c8 8 10 18 10 28 0 4-1 8-2 10H24c-1-2-2-6-2-10 0-10 2-20 10-28Z" fill="#F4F0FF"/>
+          <path d="M32 14c4.2 5.2 5.5 11 5.5 18.5 0 1.2-.1 2.3-.2 3.4h-10.6c-.1-1.1-.2-2.2-.2-3.4C26.5 25 27.8 19.2 32 14Z" fill="#C026D3"/>
+          <circle cx="32" cy="24" r="3.2" fill="#fff"/>
+          <path d="M24 40c-6 1.2-10 5.2-12 10 4.2-1.2 8-1 12-3V40Z" fill="#F0ABFC"/>
+          <path d="M40 40c6 1.2 10 5.2 12 10-4.2-1.2-8-1-12-3V40Z" fill="#E879F9"/>
+          <path d="M28 48c1.2 4 2.6 7.2 4 10 1.4-2.8 2.8-6 4-10h-8Z" fill="#FB923C"/>
+          <path d="M30.2 50c.6 2.4 1.2 4.4 1.8 6.2.6-1.8 1.2-3.8 1.8-6.2h-3.6Z" fill="#FDBA74"/>
+        </svg>
+      </div>
+      <strong>LintHR is live</strong>
+      <p>The platform is online and ready to use</p>
+      <a class="promo-btn" href="https://lintcloud.linthr.com" target="_blank" rel="noopener noreferrer">
+        <span>Open LintHR</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+    {% endblock %}
+  </aside>
+
+  <div class="app-main">
+    <header class="canvas-head">
+      <div class="head-lead">
+        <button type="button" class="menu-btn" data-sidebar-toggle aria-label="Open menu" aria-controls="app-sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+
+        <div class="greet">
+          {% block greet %}
+            <h1>Good <span data-daypart>day</span>, {% if admin_user.first_name %}{{ admin_user.first_name }}{% else %}{{ admin_user.email }}{% endif %}</h1>
+            <p>{% block page_sub %}Here's what's happening in your organization today.{% endblock %}</p>
+          {% endblock %}
+        </div>
+      </div>
+
+      <div class="head-tools">
+        {% block head_actions %}{% endblock %}
+        <a class="icon-round" href="#flash" aria-label="Messages">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>
+        </a>
+        {% if admin_user %}
+          <div class="user-menu">
+            <button type="button" class="user-chip" data-user-toggle aria-expanded="false" aria-haspopup="true">
+              <span class="avatar" aria-hidden="true">
+                {% if admin_user.first_name and admin_user.last_name %}{{ admin_user.first_name|make_list|first|upper }}{{ admin_user.last_name|make_list|first|upper }}{% elif admin_user.first_name %}{{ admin_user.first_name|make_list|first|upper }}{% else %}{{ admin_user.email|make_list|first|upper }}{% endif %}
+              </span>
+              <span class="user-meta">
+                <strong>{% if admin_user.first_name %}{{ admin_user.first_name }}{% if admin_user.last_name %} {{ admin_user.last_name }}{% endif %}{% else %}{{ admin_user.email }}{% endif %}</strong>
+                <small><span class="user-role">Admin</span></small>
+              </span>
+              <svg class="user-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="user-drop" data-user-menu hidden>
+              <div class="user-drop-head">
+                <span class="avatar" aria-hidden="true">
+                  {% if admin_user.first_name and admin_user.last_name %}{{ admin_user.first_name|make_list|first|upper }}{{ admin_user.last_name|make_list|first|upper }}{% elif admin_user.first_name %}{{ admin_user.first_name|make_list|first|upper }}{% else %}{{ admin_user.email|make_list|first|upper }}{% endif %}
+                </span>
+                <div class="user-drop-meta">
+                  <strong>{% if admin_user.first_name %}{{ admin_user.first_name }}{% if admin_user.last_name %} {{ admin_user.last_name }}{% endif %}{% else %}{{ admin_user.email }}{% endif %}</strong>
+                  <span>{{ admin_user.email }}</span>
+                </div>
+              </div>
+              <div class="user-drop-divider" role="separator"></div>
+              <a class="user-drop-action" href="{% url 'accounts:logout' %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <path d="M16 17l5-5-5-5"/>
+                  <path d="M21 12H9"/>
+                </svg>
+                <span>Sign out</span>
+              </a>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </header>
+
+    <main class="canvas">
+      {% if messages %}
+        <ul class="messages" id="flash">
+          {% for message in messages %}
+            <li class="message message-{{ message.tags }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+{% block page_js %}{% endblock %}
+<script src="{% static 'js/app.js' %}?v=5" defer></script>
+{% endblock %}

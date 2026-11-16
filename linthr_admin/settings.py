@@ -84,6 +84,27 @@ DATABASES = {
     }
 }
 
+SESSION_ENGINE = os.getenv(
+    'SESSION_ENGINE',
+    'django.contrib.sessions.backends.signed_cookies',
+)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = os.getenv('SESSION_COOKIE_SAMESITE', 'Lax')
+
+_session_secure_default = '0' if DEBUG else '1'
+
+SESSION_COOKIE_SECURE = (
+    os.getenv('SESSION_COOKIE_SECURE', _session_secure_default).strip() == '1'
+)
+
+CSRF_COOKIE_SECURE = (
+    os.getenv('CSRF_COOKIE_SECURE', _session_secure_default).strip() == '1'
+)
+
+CSRF_COOKIE_SAMESITE = os.getenv('CSRF_COOKIE_SAMESITE', 'Lax')
+
+SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', str(60 * 60 * 12)))
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',

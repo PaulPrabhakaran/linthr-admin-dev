@@ -8,6 +8,7 @@ def get_admin_session(request):
 
 
 def set_admin_session(request, admin_data: dict):
+    request.session.cycle_key()
     request.session[settings.ADMIN_SESSION_KEY] = {
         'id': admin_data.get('id'),
         'email': admin_data.get('email'),
@@ -17,12 +18,14 @@ def set_admin_session(request, admin_data: dict):
         'is_active': bool(admin_data.get('is_active', True)),
     }
     request.session.modified = True
+    request.session.save()
 
 
 def clear_admin_session(request):
     if settings.ADMIN_SESSION_KEY in request.session:
         del request.session[settings.ADMIN_SESSION_KEY]
         request.session.modified = True
+        request.session.save()
 
 
 def is_admin_authenticated(request) -> bool:

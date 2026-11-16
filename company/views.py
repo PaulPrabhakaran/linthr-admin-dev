@@ -197,7 +197,7 @@ def _enrich_company_row(company: dict) -> dict:
 
 
 def _load_company_board(request):
-    client = LinthrApiClient()
+    client = LinthrApiClient.for_request(request)
     companies = []
     error = None
     try:
@@ -237,7 +237,7 @@ class CompanyListView(AdminSessionRequiredMixin, View):
     def get(self, request):
         params = parse_list_params(request)
         logger.debug('Company list GET - params=%s', params)
-        client = LinthrApiClient()
+        client = LinthrApiClient.for_request(request)
         companies = []
         error = None
         stats = {
@@ -388,7 +388,7 @@ class CompanyActiveToggleView(AdminSessionRequiredMixin, View):
                 status=400,
             )
 
-        client = LinthrApiClient()
+        client = LinthrApiClient.for_request(request)
         try:
             result = client.set_company_active(company_id, active=active)
             logger.debug(
@@ -432,7 +432,7 @@ class CompanyDetailView(AdminSessionRequiredMixin, View):
         if week not in ('this', 'last'):
             week = 'this'
         logger.debug('Company detail GET - company_id=%s week=%s', company_id, week)
-        client = LinthrApiClient()
+        client = LinthrApiClient.for_request(request)
         company = None
         stats = None
         company_profile = _empty_company_profile()

@@ -17,7 +17,7 @@ class EmployeeListView(AdminSessionRequiredMixin, View):
     def get(self, request, company_id):
         params = parse_list_params(request)
         logger.debug('Employee list GET - company_id=%s params=%s', company_id, params)
-        client = LinthrApiClient()
+        client = LinthrApiClient.for_request(request)
         employees = []
         company = {'id': company_id}
         error = None

@@ -135,19 +135,15 @@ LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'accounts:login'
 
-# linthr API client (must match LintHrDjango LINTHR_ADMIN_SECRET)
 LINTHR_API_BASE_URL = os.getenv('LINTHR_API_BASE_URL', 'http://127.0.0.1:8001').rstrip('/')
 LINTHR_ADMIN_SECRET = os.getenv('LINTHR_ADMIN_SECRET', '')
 LINTHR_ADMIN_SECRET_HEADER = os.getenv('LINTHR_ADMIN_SECRET_HEADER', 'X-Admin-Secret')
+LINTHR_ADMIN_UUID_HEADER = os.getenv('LINTHR_ADMIN_UUID_HEADER', 'X-Admin-UUID')
 
-# Google Identity Services (same Web client ID as LintHrDjango GOOGLE_CLIENT_ID)
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
 
-# Session key used to store platform admin identity after login API success
 ADMIN_SESSION_KEY = 'linthr_admin_user'
 
-# Always log to stdout/stderr so platforms like Render show app + request
-# errors even when DEBUG=False (Django's default only emails ADMINS).
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

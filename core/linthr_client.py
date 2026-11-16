@@ -28,21 +28,35 @@ class LinthrApiClient:
         base_url: str | None = None,
         secret: str | None = None,
         secret_header: str | None = None,
+        admin_uuid: str | None = None,
         timeout: int = 30,
     ):
         self.base_url = (base_url or settings.LINTHR_API_BASE_URL).rstrip('/')
         self.secret = secret if secret is not None else settings.LINTHR_ADMIN_SECRET
         self.secret_header = secret_header or settings.LINTHR_ADMIN_SECRET_HEADER
+        self.admin_uuid = str(admin_uuid or '').strip() or None
+        self.uuid_header = getattr(settings, 'LINTHR_ADMIN_UUID_HEADER', 'X-Admin-UUID')
         self.timeout = timeout
+
+    @classmethod
+    def for_request(cls, request, **kwargs) -> 'LinthrApiClient':
+        """Build a client that identifies the signed-in admin for verified API checks."""
+        from accounts.session import get_admin_session
+
+        session = get_admin_session(request) or {}
+        return cls(admin_uuid=session.get('user_uuid'), **kwargs)
 
     def _headers(self) -> dict[str, str]:
         if not self.secret:
             raise LinthrApiError('LINTHR_ADMIN_SECRET is not configured.')
-        return {
+        headers = {
             self.secret_header: self.secret,
             'Accept': 'application/json',
             'Content-Type': 'application/json',
         }
+        if self.admin_uuid:
+            headers[self.uuid_header] = self.admin_uuid
+        return headers
 
     def _request(self, method: str, path: str, timeout: int | None = None, **kwargs) -> Any:
         url = f'{self.base_url}{path}'
@@ -121,6 +135,15 @@ class LinthrApiClient:
     def admin_logout(self) -> Any:
         logger.debug('admin_logout')
         return self._request('POST', '/admin-api/auth/logout/', json={})
+
+    def get_me(self) -> dict[str, Any]:
+        """Live AdminUser payload (is_verified / is_active from LintHrDjango DB)."""
+        logger.debug('get_me - user_uuid=%s', self.admin_uuid)
+        data = self._request('GET', '/admin-api/auth/me/')
+        if isinstance(data, dict):
+            payload = data.get('data')
+            return payload if isinstance(payload, dict) else {}
+        return {}
 
     def get_dashboard(self, week: str = 'this', company_id: str | int | None = None) -> dict[str, Any]:
         params: dict[str, Any] = {'week': week}

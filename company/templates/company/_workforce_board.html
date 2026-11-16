@@ -270,7 +270,7 @@
 
     <article class="card">
       <div class="card-head"><h2>Employee status</h2></div>
-      <div class="donut-layout">
+      <div class="donut-layout is-status">
         <div class="donut-stage">
           <canvas
             data-status-chart
@@ -280,12 +280,20 @@
           ></canvas>
           <div class="donut-center">
             <strong data-count="{{ people.total }}">{{ people.total }}</strong>
-            <span>Employees</span>
+            <span>Total Employees</span>
           </div>
         </div>
         <ul class="legend">
-          <li><i style="background:#a02880"></i><span>Active</span><b>{{ people.active_pct }}%</b></li>
-          <li><i style="background:#f0c6e4"></i><span>Inactive</span><b>{{ people.inactive_pct }}%</b></li>
+          <li>
+            <i style="background:#a02880"></i>
+            <span>Active <b>( {{ people.active }} )</b></span>
+            <b>{{ people.active_pct }}%</b>
+          </li>
+          <li>
+            <i style="background:#f0c6e4"></i>
+            <span>Inactive <b>( {{ people.inactive }} )</b></span>
+            <b>{{ people.inactive_pct }}%</b>
+          </li>
         </ul>
       </div>
     </article>

@@ -119,13 +119,25 @@
               ></canvas>
               <div class="donut-center">
                 <strong data-count="{{ people.total }}">{{ people.total }}</strong>
-                <span>Employees</span>
+                <span>Total Employees</span>
               </div>
             </div>
             <ul class="legend">
-              <li><i class="swatch-present"></i><span>Present</span><b>{{ attendance.present_pct }}%</b></li>
-              <li><i class="swatch-leave"></i><span>On Leave</span><b>{{ attendance.leave_pct }}%</b></li>
-              <li><i class="swatch-absent"></i><span>Absent</span><b>{{ attendance.absent_pct }}%</b></li>
+              <li>
+                <i class="swatch-present"></i>
+                <span>Present <b>( {{ attendance.present_today }} )</b></span>
+                <b>{{ attendance.present_pct }}%</b>
+              </li>
+              <li>
+                <i class="swatch-leave"></i>
+                <span>On Leave <b>( {{ attendance.on_leave }} )</b></span>
+                <b>{{ attendance.leave_pct }}%</b>
+              </li>
+              <li>
+                <i class="swatch-absent"></i>
+                <span>Absent <b>( {{ attendance.absent }} )</b></span>
+                <b>{{ attendance.absent_pct }}%</b>
+              </li>
             </ul>
           </div>
         </article>

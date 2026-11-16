@@ -1133,7 +1133,13 @@ body.sidebar-collapsed .sidebar-head { justify-content: center; flex-wrap: wrap;
   padding: 0.5rem;
 }
 .donut-center strong { font-size: 1.65rem; letter-spacing: -0.04em; line-height: 1; }
-.donut-center span { color: var(--muted); font-size: 0.72rem; margin-top: 0.15rem; }
+.donut-center span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  margin-top: 0.15rem;
+  line-height: 1.25;
+  max-width: 7.5rem;
+}
 .donut-layout.is-status { min-height: 240px; }
 .donut-layout.is-status .donut-stage {
   width: min(280px, 100%);
@@ -1167,6 +1173,10 @@ body.sidebar-collapsed .sidebar-head { justify-content: center; flex-wrap: wrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+}
+.legend span b {
+  color: var(--ink, #1c1232);
+  font-weight: 700;
 }
 .legend b { font-weight: 600; white-space: nowrap; }
 

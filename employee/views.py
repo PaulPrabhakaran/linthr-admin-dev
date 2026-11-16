@@ -137,33 +137,50 @@ class EmployeeListView(AdminSessionRequiredMixin, View):
             try:
                 dash = client.get_dashboard(company_id=company_id) or {}
                 total = int(dash.get('total_employees') or people['total'] or 0)
-                present = int(dash.get('present_today') or 0)
-                on_leave = int(dash.get('on_leave') or 0)
-                absent = int(dash.get('absent') or 0)
+                if total:
+                    people['total'] = total
+                present = max(0, int(dash.get('present_today') or 0))
+                on_leave = max(0, int(dash.get('on_leave') or 0))
+                absent = max(0, int(dash.get('absent') or 0))
+                # Unaccounted headcount (not present / not on leave) counts as absent
+                # so the chart and percentages always cover 100% of employees.
+                accounted = present + on_leave + absent
+                if total > accounted:
+                    absent += total - accounted
+                elif total and accounted > total:
+                    overflow = accounted - total
+                    reduce_absent = min(absent, overflow)
+                    absent -= reduce_absent
+                    overflow -= reduce_absent
+                    reduce_leave = min(on_leave, overflow)
+                    on_leave -= reduce_leave
+                    overflow -= reduce_leave
+                    present = max(0, present - overflow)
+
+                def _pct(count: int) -> int:
+                    return round((count / total) * 100) if total else 0
+
+                present_pct = _pct(present)
+                leave_pct = _pct(on_leave)
+                absent_pct = _pct(absent)
+                # Keep percentages summing to 100 after rounding.
+                if total and (present_pct + leave_pct + absent_pct) != 100:
+                    absent_pct = max(0, 100 - present_pct - leave_pct)
+
                 attendance = {
                     'present_today': present,
                     'on_leave': on_leave,
                     'absent': absent,
-                    'present_pct': (
-                        dash.get('present_pct')
-                        if dash.get('present_pct') is not None
-                        else (round((present / total) * 100) if total else 0)
-                    ),
-                    'leave_pct': (
-                        dash.get('leave_pct')
-                        if dash.get('leave_pct') is not None
-                        else (round((on_leave / total) * 100) if total else 0)
-                    ),
-                    'absent_pct': (
-                        dash.get('absent_pct')
-                        if dash.get('absent_pct') is not None
-                        else (round((absent / total) * 100) if total else 0)
-                    ),
+                    'present_pct': present_pct,
+                    'leave_pct': leave_pct,
+                    'absent_pct': absent_pct,
                 }
                 logger.debug(
-                    'Employee attendance loaded - company_id=%s present=%s',
+                    'Employee attendance loaded - company_id=%s present=%s leave=%s absent=%s',
                     company_id,
                     present,
+                    on_leave,
+                    absent,
                 )
             except LinthrApiError as dash_exc:
                 logger.exception(

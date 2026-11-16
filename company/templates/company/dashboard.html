@@ -102,13 +102,25 @@
             ></canvas>
             <div class="donut-center">
               <strong data-count="{{ stats.total }}">{{ stats.total }}</strong>
-              <span>Companies</span>
+              <span>Total Companies</span>
             </div>
           </div>
           <ul class="legend">
-            <li><i class="swatch-present"></i><span>Active</span><b>{{ stats.ready_pct }}%</b></li>
-            <li><i class="swatch-leave"></i><span>No Email</span><b>{{ stats.no_email_pct }}%</b></li>
-            <li><i class="swatch-absent"></i><span>Inactive</span><b>{{ stats.inactive_pct }}%</b></li>
+            <li>
+              <i class="swatch-present"></i>
+              <span>Active <b>( {{ stats.ready }} )</b></span>
+              <b>{{ stats.ready_pct }}%</b>
+            </li>
+            <li>
+              <i class="swatch-leave"></i>
+              <span>No Email <b>( {{ stats.no_email }} )</b></span>
+              <b>{{ stats.no_email_pct }}%</b>
+            </li>
+            <li>
+              <i class="swatch-absent"></i>
+              <span>Inactive <b>( {{ stats.inactive }} )</b></span>
+              <b>{{ stats.inactive_pct }}%</b>
+            </li>
           </ul>
         </div>
       </article>

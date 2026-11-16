@@ -32,6 +32,14 @@ class EmployeeListView(AdminSessionRequiredMixin, View):
             'role_rows': [],
             'role_chart': {'labels': [], 'values': []},
         }
+        attendance = {
+            'present_today': 0,
+            'on_leave': 0,
+            'absent': 0,
+            'present_pct': 0,
+            'leave_pct': 0,
+            'absent_pct': 0,
+        }
         try:
             payload = client.get_company_employees_response(
                 company_id,
@@ -115,6 +123,34 @@ class EmployeeListView(AdminSessionRequiredMixin, View):
             params['status'] = payload.get('status') or params['status']
             if payload.get('search') is not None:
                 params['search'] = payload.get('search')
+            try:
+                dash = client.get_dashboard(company_id=company_id) or {}
+                total = int(dash.get('total_employees') or people['total'] or 0)
+                present = int(dash.get('present_today') or 0)
+                on_leave = int(dash.get('on_leave') or 0)
+                absent = int(dash.get('absent') or 0)
+                attendance = {
+                    'present_today': present,
+                    'on_leave': on_leave,
+                    'absent': absent,
+                    'present_pct': (
+                        dash.get('present_pct')
+                        if dash.get('present_pct') is not None
+                        else (round((present / total) * 100) if total else 0)
+                    ),
+                    'leave_pct': (
+                        dash.get('leave_pct')
+                        if dash.get('leave_pct') is not None
+                        else (round((on_leave / total) * 100) if total else 0)
+                    ),
+                    'absent_pct': (
+                        dash.get('absent_pct')
+                        if dash.get('absent_pct') is not None
+                        else (round((absent / total) * 100) if total else 0)
+                    ),
+                }
+            except LinthrApiError:
+                pass
         except LinthrApiError as exc:
             error = str(exc)
             messages.error(request, f'Unable to load employees: {exc}')
@@ -137,6 +173,7 @@ class EmployeeListView(AdminSessionRequiredMixin, View):
                 'employees': employees,
                 'active_count': people['active'],
                 'people': people,
+                'attendance': attendance,
                 'error': error,
                 'pagination': pagination,
             },

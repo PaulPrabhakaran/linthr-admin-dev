@@ -105,18 +105,27 @@
           {% endif %}
         </article>
         <article class="card">
-          <div class="card-head"><h2>Employee status</h2></div>
-          <div class="donut-layout">
+          <div class="card-head">
+            <h2>Employee Status</h2>
+          </div>
+          <div class="donut-layout is-status">
             <div class="donut-stage">
-              <canvas data-status-chart data-active="{{ people.active }}" data-inactive="{{ people.inactive }}" aria-label="Active and inactive employees"></canvas>
+              <canvas
+                data-status-chart
+                data-present="{{ attendance.present_today }}"
+                data-leave="{{ attendance.on_leave }}"
+                data-absent="{{ attendance.absent }}"
+                aria-label="Present, on leave, and absent employees"
+              ></canvas>
               <div class="donut-center">
-                <strong>{{ people.total }}</strong>
+                <strong data-count="{{ people.total }}">{{ people.total }}</strong>
                 <span>Employees</span>
               </div>
             </div>
             <ul class="legend">
-              <li><i style="background:#a02880"></i><span>Active</span><b>{{ people.active_pct }}%</b></li>
-              <li><i style="background:#f0c6e4"></i><span>Inactive</span><b>{{ people.inactive_pct }}%</b></li>
+              <li><i class="swatch-present"></i><span>Present</span><b>{{ attendance.present_pct }}%</b></li>
+              <li><i class="swatch-leave"></i><span>On Leave</span><b>{{ attendance.leave_pct }}%</b></li>
+              <li><i class="swatch-absent"></i><span>Absent</span><b>{{ attendance.absent_pct }}%</b></li>
             </ul>
           </div>
         </article>
@@ -198,7 +207,7 @@
       </div>
       {% if employees %}
         <div class="data-table-wrap">
-          <table class="data-table">
+          <table class="data-table data-table-compact">
             <thead>
               <tr>
                 <th>

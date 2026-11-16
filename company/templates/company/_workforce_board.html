@@ -61,9 +61,46 @@
 
   {% with profile=company_profile.profile %}
   <section class="card profile-hero">
+    <div class="profile-hero-toolbar">
+      <div class="profile-kicker">Company profile</div>
+      <div class="row-menu profile-hero-menu">
+        <button
+          type="button"
+          class="row-menu-trigger"
+          aria-label="Company settings"
+          aria-haspopup="menu"
+          aria-expanded="false"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+          </svg>
+        </button>
+        <div class="row-menu-panel" role="menu" hidden>
+          <button
+            type="button"
+            class="row-menu-item js-company-active {% if company.active %}is-deactivate{% else %}is-activate{% endif %}"
+            role="menuitem"
+            data-company-id="{{ company.id }}"
+            data-company-name="{{ company.name|default:'Company'|escape }}"
+            data-active="{% if company.active %}true{% else %}false{% endif %}"
+            data-url="{% url 'company:company_active' company.id %}"
+          >
+            <span class="row-menu-ico {% if company.active %}is-deactivate{% else %}is-activate{% endif %}" data-active-icon aria-hidden="true">
+              {% if company.active %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v8"/><path d="M8.5 6.2a7 7 0 1 0 7 0"/></svg>
+              {% else %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              {% endif %}
+            </span>
+            <span data-active-label>{% if company.active %}Deactivate{% else %}Activate{% endif %}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="profile-hero-top">
       <div class="profile-hero-id">
-        <div class="profile-kicker">Company profile</div>
         <div class="profile-hero-brand">
           {% if profile.light_logo_image or profile.dark_logo_image %}
             <img class="profile-mark" src="{{ profile.light_logo_image|default:profile.dark_logo_image }}" alt="">
@@ -78,17 +115,9 @@
               {% else %}
                 <span class="status-pill" data-company-status="pill" data-company-id="{{ company.id }}">Inactive</span>
               {% endif %}
-              <button
-                type="button"
-                class="btn btn-sm {% if company.active %}btn-danger{% else %}btn-success{% endif %} js-company-active"
-                data-company-id="{{ company.id }}"
-                data-company-name="{{ company.name|default:'Company'|escape }}"
-                data-active="{% if company.active %}true{% else %}false{% endif %}"
-                data-url="{% url 'company:company_active' company.id %}"
-              >{% if company.active %}Deactivate{% else %}Activate{% endif %}</button>
             </div>
             {% if company.domain %}
-              <p class="profile-meta">Tenant domain <strong>{{ company.domain }}</strong></p>
+              <p class="profile-meta"><span>Tenant domain</span><strong>{{ company.domain }}</strong></p>
             {% elif profile.about %}
               <p class="profile-meta">{{ profile.about }}</p>
             {% endif %}
@@ -240,27 +269,23 @@
     </article>
 
     <article class="card">
-      <div class="card-head">
-        <h2>Employee Status</h2>
-      </div>
-      <div class="donut-layout is-status">
+      <div class="card-head"><h2>Employee status</h2></div>
+      <div class="donut-layout">
         <div class="donut-stage">
           <canvas
             data-status-chart
-            data-present="{{ stats.present_today }}"
-            data-leave="{{ stats.on_leave }}"
-            data-absent="{{ stats.absent }}"
-            aria-label="Present, on leave, and absent employees"
+            data-active="{{ people.active }}"
+            data-inactive="{{ people.inactive }}"
+            aria-label="Active and inactive employees"
           ></canvas>
           <div class="donut-center">
-            <strong data-count="{{ stats.total_employees }}">{{ stats.total_employees }}</strong>
+            <strong data-count="{{ people.total }}">{{ people.total }}</strong>
             <span>Employees</span>
           </div>
         </div>
         <ul class="legend">
-          <li><i class="swatch-present"></i><span>Present</span><b>{{ stats.present_pct }}%</b></li>
-          <li><i class="swatch-leave"></i><span>On Leave</span><b>{{ stats.leave_pct }}%</b></li>
-          <li><i class="swatch-absent"></i><span>Absent</span><b>{{ stats.absent_pct }}%</b></li>
+          <li><i style="background:#a02880"></i><span>Active</span><b>{{ people.active_pct }}%</b></li>
+          <li><i style="background:#f0c6e4"></i><span>Inactive</span><b>{{ people.inactive_pct }}%</b></li>
         </ul>
       </div>
     </article>

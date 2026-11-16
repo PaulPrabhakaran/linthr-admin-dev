@@ -366,6 +366,119 @@
     });
   }
 
+  function initFancySelects() {
+    var selects = document.querySelectorAll("select[data-fancy-select]");
+    if (!selects.length) return;
+
+    var openWrap = null;
+
+    function closeOpen() {
+      if (!openWrap) return;
+      openWrap.classList.remove("is-open");
+      var host = openWrap.closest(".week-select");
+      if (host) host.classList.remove("is-open");
+      var btn = openWrap.querySelector(".fancy-select-trigger");
+      if (btn) btn.setAttribute("aria-expanded", "false");
+      var menu = openWrap.querySelector(".fancy-select-menu");
+      if (menu) menu.hidden = true;
+      openWrap = null;
+    }
+
+    selects.forEach(function (select) {
+      if (select.dataset.fancyReady === "1") return;
+      select.dataset.fancyReady = "1";
+      select.classList.add("fancy-select-native");
+
+      var wrap = document.createElement("div");
+      wrap.className = "fancy-select";
+      select.parentNode.insertBefore(wrap, select);
+      wrap.appendChild(select);
+
+      var trigger = document.createElement("button");
+      trigger.type = "button";
+      trigger.className = "fancy-select-trigger";
+      trigger.setAttribute("aria-haspopup", "listbox");
+      trigger.setAttribute("aria-expanded", "false");
+      trigger.innerHTML =
+        '<span class="fancy-select-trigger-label"></span>' +
+        '<svg class="fancy-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+
+      var menu = document.createElement("ul");
+      menu.className = "fancy-select-menu";
+      menu.setAttribute("role", "listbox");
+      menu.hidden = true;
+
+      wrap.appendChild(trigger);
+      wrap.appendChild(menu);
+
+      var labelEl = trigger.querySelector(".fancy-select-trigger-label");
+
+      function selectedOption() {
+        return select.options[select.selectedIndex] || select.options[0];
+      }
+
+      function syncLabel() {
+        var opt = selectedOption();
+        labelEl.textContent = opt ? opt.textContent : "";
+      }
+
+      function buildMenu() {
+        menu.innerHTML = "";
+        Array.prototype.forEach.call(select.options, function (opt, index) {
+          var li = document.createElement("li");
+          li.setAttribute("role", "presentation");
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "fancy-select-option" + (opt.selected ? " is-selected" : "");
+          btn.setAttribute("role", "option");
+          btn.setAttribute("aria-selected", opt.selected ? "true" : "false");
+          btn.dataset.value = opt.value;
+          btn.dataset.index = String(index);
+          btn.innerHTML =
+            '<span>' + opt.textContent + "</span>" +
+            '<svg class="fancy-select-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+          btn.addEventListener("click", function () {
+            if (select.value !== opt.value) {
+              select.value = opt.value;
+              select.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+            syncLabel();
+            closeOpen();
+          });
+          li.appendChild(btn);
+          menu.appendChild(li);
+        });
+      }
+
+      syncLabel();
+      buildMenu();
+
+      trigger.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        var willOpen = menu.hidden;
+        closeOpen();
+        if (!willOpen) return;
+        buildMenu();
+        menu.hidden = false;
+        wrap.classList.add("is-open");
+        var host = wrap.closest(".week-select");
+        if (host) host.classList.add("is-open");
+        trigger.setAttribute("aria-expanded", "true");
+        openWrap = wrap;
+      });
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!openWrap) return;
+      if (!openWrap.contains(event.target)) closeOpen();
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closeOpen();
+    });
+  }
+
   function boot() {
     initSidebar();
     initUserMenu();
@@ -375,6 +488,7 @@
     initStatusCharts();
     initAreaCharts();
     initBranchMap();
+    initFancySelects();
     // Status chips on company/employee lists are server-rendered links.
   }
 

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block body_class %}auth-body{% endblock %}
 
@@ -14,8 +15,8 @@
 
     <div class="auth-brand-inner">
       <a class="auth-brand-mark" href="{% url 'accounts:login' %}">
-        <span class="auth-brand-mark-badge">LH</span>
-        LintHR <span>Admin</span>
+        <img class="auth-brand-logo" src="{% static 'img/logo-white.png' %}" alt="LintHR">
+        <span>Admin</span>
       </a>
 
       <div class="auth-brand-hero">

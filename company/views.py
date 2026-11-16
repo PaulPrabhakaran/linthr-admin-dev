@@ -404,6 +404,13 @@ class CompanyDetailView(AdminSessionRequiredMixin, View):
         company = None
         stats = None
         company_profile = _empty_company_profile()
+        people = {
+            'total': 0,
+            'active': 0,
+            'inactive': 0,
+            'active_pct': 0,
+            'inactive_pct': 0,
+        }
         error = None
         try:
             companies = client.list_companies()
@@ -430,6 +437,53 @@ class CompanyDetailView(AdminSessionRequiredMixin, View):
                         request,
                         f'Company profile details could not be loaded: {profile_exc}',
                     )
+                try:
+                    emp_payload = client.get_company_employees_response(
+                        company_id,
+                        page=1,
+                        page_size=1,
+                    )
+                    api_stats = emp_payload.get('stats')
+                    if isinstance(api_stats, dict) and api_stats:
+                        total = int(api_stats.get('total') or 0)
+                        active = int(api_stats.get('active') or 0)
+                        inactive = int(api_stats.get('inactive') or 0)
+                        people = {
+                            'total': total,
+                            'active': active,
+                            'inactive': inactive,
+                            'active_pct': api_stats.get('active_pct')
+                            if api_stats.get('active_pct') is not None
+                            else (round((active / total) * 100) if total else 0),
+                            'inactive_pct': api_stats.get('inactive_pct')
+                            if api_stats.get('inactive_pct') is not None
+                            else (round((inactive / total) * 100) if total else 0),
+                        }
+                    elif stats:
+                        total = int(stats.get('total_employees') or 0)
+                        active = int(
+                            company.get('active_employees')
+                            if company.get('active_employees') is not None
+                            else total
+                        )
+                        inactive = max(total - active, 0)
+                        people = {
+                            'total': total,
+                            'active': active,
+                            'inactive': inactive,
+                            'active_pct': round((active / total) * 100) if total else 0,
+                            'inactive_pct': round((inactive / total) * 100) if total else 0,
+                        }
+                except LinthrApiError:
+                    if stats:
+                        total = int(stats.get('total_employees') or 0)
+                        people = {
+                            'total': total,
+                            'active': total,
+                            'inactive': 0,
+                            'active_pct': 100 if total else 0,
+                            'inactive_pct': 0,
+                        }
         except LinthrApiError as exc:
             error = str(exc)
             messages.error(request, f'Unable to load company: {exc}')
@@ -440,6 +494,7 @@ class CompanyDetailView(AdminSessionRequiredMixin, View):
                 'company': company,
                 'company_id': company_id,
                 'stats': stats,
+                'people': people,
                 'company_profile': company_profile,
                 'error': error,
                 'week': week,

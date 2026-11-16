@@ -73,9 +73,9 @@
         <div class="card-head">
           <h2>Companies Added</h2>
           <form method="get" class="week-select">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+            <svg class="week-select-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
             <label class="sr-only" for="weekRange">Company range</label>
-            <select id="weekRange" name="week" onchange="this.form.submit()">
+            <select id="weekRange" name="week" data-fancy-select onchange="this.form.submit()">
               <option value="this" {% if week == "this" %}selected{% endif %}>This Week</option>
               <option value="last" {% if week == "last" %}selected{% endif %}>Last Week</option>
             </select>

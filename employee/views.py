@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import messages
 from django.shortcuts import render
 from django.views import View
@@ -6,12 +8,15 @@ from accounts.mixins import AdminSessionRequiredMixin
 from core.linthr_client import LinthrApiClient, LinthrApiError
 from core.table_query import pagination_context, parse_list_params
 
+logger = logging.getLogger('linthr_admin')
+
 
 class EmployeeListView(AdminSessionRequiredMixin, View):
     template_name = 'employee/employee_list.html'
 
     def get(self, request, company_id):
         params = parse_list_params(request)
+        logger.debug('Employee list GET - company_id=%s params=%s', company_id, params)
         client = LinthrApiClient()
         employees = []
         company = {'id': company_id}
@@ -123,6 +128,12 @@ class EmployeeListView(AdminSessionRequiredMixin, View):
             params['status'] = payload.get('status') or params['status']
             if payload.get('search') is not None:
                 params['search'] = payload.get('search')
+            logger.debug(
+                'Employee list loaded - company_id=%s count=%s page=%s',
+                company_id,
+                count,
+                page,
+            )
             try:
                 dash = client.get_dashboard(company_id=company_id) or {}
                 total = int(dash.get('total_employees') or people['total'] or 0)
@@ -149,9 +160,19 @@ class EmployeeListView(AdminSessionRequiredMixin, View):
                         else (round((absent / total) * 100) if total else 0)
                     ),
                 }
-            except LinthrApiError:
-                pass
+                logger.debug(
+                    'Employee attendance loaded - company_id=%s present=%s',
+                    company_id,
+                    present,
+                )
+            except LinthrApiError as dash_exc:
+                logger.exception(
+                    'Employee attendance load failed - company_id=%s - %s',
+                    company_id,
+                    dash_exc,
+                )
         except LinthrApiError as exc:
+            logger.exception('Employee list failed - company_id=%s - %s', company_id, exc)
             error = str(exc)
             messages.error(request, f'Unable to load employees: {exc}')
 

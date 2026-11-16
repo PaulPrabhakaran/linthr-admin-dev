@@ -125,17 +125,29 @@ GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
 # Session key used to store platform admin identity after login API success
 ADMIN_SESSION_KEY = 'linthr_admin_user'
 
-# Always log request errors to stdout/stderr so platforms like Render show
-# tracebacks even when DEBUG=False (Django's default only emails ADMINS).
+# Always log to stdout/stderr so platforms like Render show app + request
+# errors even when DEBUG=False (Django's default only emails ADMINS).
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
         },
     },
     'loggers': {
+        'linthr_admin': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
         'django.request': {
             'handlers': ['console'],
             'level': 'ERROR',

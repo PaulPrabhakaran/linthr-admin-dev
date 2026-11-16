@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import requests
 from django.conf import settings
+
+logger = logging.getLogger('linthr_admin')
 
 
 class LinthrApiError(Exception):
@@ -43,6 +46,7 @@ class LinthrApiClient:
 
     def _request(self, method: str, path: str, timeout: int | None = None, **kwargs) -> Any:
         url = f'{self.base_url}{path}'
+        logger.debug('Linthr API request - %s %s', method, url)
         try:
             response = requests.request(
                 method,
@@ -52,8 +56,15 @@ class LinthrApiClient:
                 **kwargs,
             )
         except requests.RequestException as exc:
+            logger.exception('Linthr API request failed - %s %s - %s', method, url, exc)
             raise LinthrApiError(f'Failed to reach linthr API: {exc}') from exc
 
+        logger.debug(
+            'Linthr API response - %s %s status=%s',
+            method,
+            path,
+            response.status_code,
+        )
         if response.status_code >= 400:
             try:
                 payload = response.json()
@@ -68,11 +79,19 @@ class LinthrApiClient:
                 )
             else:
                 message = str(payload)
-            raise LinthrApiError(
+            err = LinthrApiError(
                 message or f'linthr API error ({response.status_code})',
                 status_code=response.status_code,
                 payload=payload,
             )
+            logger.exception(
+                'Linthr API error - %s %s status=%s message=%s',
+                method,
+                path,
+                response.status_code,
+                err,
+            )
+            raise err
 
         if response.status_code == 204 or not response.content:
             return None
@@ -80,9 +99,11 @@ class LinthrApiClient:
         try:
             return response.json()
         except ValueError as exc:
+            logger.exception('Linthr API invalid JSON - %s %s - %s', method, path, exc)
             raise LinthrApiError('Invalid JSON response from linthr API.') from exc
 
     def admin_signup(self, id_token: str) -> dict[str, Any]:
+        logger.debug('admin_signup - id_token_present=%s', bool(id_token))
         return self._request(
             'POST',
             '/admin-api/auth/google/',
@@ -90,6 +111,7 @@ class LinthrApiClient:
         )
 
     def admin_login(self, id_token: str) -> dict[str, Any]:
+        logger.debug('admin_login - id_token_present=%s', bool(id_token))
         return self._request(
             'POST',
             '/admin-api/auth/google/',
@@ -97,12 +119,14 @@ class LinthrApiClient:
         )
 
     def admin_logout(self) -> Any:
+        logger.debug('admin_logout')
         return self._request('POST', '/admin-api/auth/logout/', json={})
 
     def get_dashboard(self, week: str = 'this', company_id: str | int | None = None) -> dict[str, Any]:
         params: dict[str, Any] = {'week': week}
         if company_id is not None:
             params['company_id'] = company_id
+        logger.debug('get_dashboard - params=%s', params)
         data = self._request(
             'GET',
             '/admin-api/dashboard/',
@@ -170,10 +194,12 @@ class LinthrApiClient:
             status=status,
             ordering=ordering,
         )
+        logger.debug('list_companies_response - params=%s', params)
         data = self._request('GET', '/admin-api/companies/', params=params or None)
         return data if isinstance(data, dict) else {'data': data or []}
 
     def get_company_profile(self, company_id: str | int) -> dict[str, Any]:
+        logger.debug('get_company_profile - company_id=%s', company_id)
         data = self._request('GET', f'/admin-api/companies/{company_id}/profile/')
         if isinstance(data, dict):
             payload = data.get('data')
@@ -181,6 +207,7 @@ class LinthrApiClient:
         return {}
 
     def set_company_active(self, company_id: str | int, *, active: bool) -> dict[str, Any]:
+        logger.debug('set_company_active - company_id=%s active=%s', company_id, active)
         data = self._request(
             'POST',
             f'/admin-api/companies/{company_id}/active/',
@@ -224,6 +251,11 @@ class LinthrApiClient:
             search=search,
             status=status,
             ordering=ordering,
+        )
+        logger.debug(
+            'get_company_employees_response - company_id=%s params=%s',
+            company_id,
+            params,
         )
         data = self._request(
             'GET',

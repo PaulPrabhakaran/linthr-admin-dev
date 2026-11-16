@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -13,6 +14,7 @@ from accounts.mixins import AdminSessionRequiredMixin
 from core.linthr_client import LinthrApiClient, LinthrApiError
 from core.table_query import pagination_context, parse_list_params
 
+logger = logging.getLogger('linthr_admin')
 KOLKATA = ZoneInfo('Asia/Kolkata')
 
 
@@ -200,7 +202,9 @@ def _load_company_board(request):
     error = None
     try:
         companies = [_enrich_company_row(item) for item in client.list_companies()]
+        logger.debug('Load company board - count=%s', len(companies))
     except LinthrApiError as exc:
+        logger.exception('Load company board failed - %s', exc)
         error = str(exc)
         messages.error(request, f'Unable to load companies: {exc}')
     return companies, error, _company_dashboard_stats(companies)
@@ -213,6 +217,7 @@ class DashboardView(AdminSessionRequiredMixin, View):
         week = request.GET.get('week') or 'this'
         if week not in ('this', 'last'):
             week = 'this'
+        logger.debug('Dashboard GET - week=%s', week)
         companies, error, _stats = _load_company_board(request)
         stats = None if error and not companies else _company_board(companies, week)
         return render(
@@ -231,6 +236,7 @@ class CompanyListView(AdminSessionRequiredMixin, View):
 
     def get(self, request):
         params = parse_list_params(request)
+        logger.debug('Company list GET - params=%s', params)
         client = LinthrApiClient()
         companies = []
         error = None
@@ -284,7 +290,14 @@ class CompanyListView(AdminSessionRequiredMixin, View):
             params['ordering'] = payload.get('ordering') or params['ordering']
             params['status'] = payload.get('status') or params['status']
             params['search'] = payload.get('search') if payload.get('search') is not None else params['search']
+            logger.debug(
+                'Company list loaded - count=%s page=%s page_size=%s',
+                count,
+                page,
+                page_size,
+            )
         except LinthrApiError as exc:
+            logger.exception('Company list failed - %s', exc)
             error = str(exc)
             messages.error(request, f'Unable to load companies: {exc}')
 
@@ -345,9 +358,11 @@ class CompanyActiveToggleView(AdminSessionRequiredMixin, View):
     """Proxy activate/deactivate to the LintHR admin API."""
 
     def post(self, request, company_id):
+        logger.debug('Company active toggle POST - company_id=%s', company_id)
         try:
             payload = json.loads(request.body.decode('utf-8') or '{}')
-        except (TypeError, ValueError, UnicodeDecodeError):
+        except (TypeError, ValueError, UnicodeDecodeError) as exc:
+            logger.exception('Company active toggle JSON parse failed - %s', exc)
             payload = request.POST
 
         raw_active = payload.get('active') if hasattr(payload, 'get') else None
@@ -363,6 +378,11 @@ class CompanyActiveToggleView(AdminSessionRequiredMixin, View):
         ):
             active = raw_active.strip().lower() in ('true', '1', 'yes')
         else:
+            logger.debug(
+                'Company active toggle invalid active value - company_id=%s raw=%s',
+                company_id,
+                raw_active,
+            )
             return JsonResponse(
                 {'success': False, 'message': "Field 'active' must be a boolean."},
                 status=400,
@@ -371,7 +391,18 @@ class CompanyActiveToggleView(AdminSessionRequiredMixin, View):
         client = LinthrApiClient()
         try:
             result = client.set_company_active(company_id, active=active)
+            logger.debug(
+                'Company active toggle success - company_id=%s active=%s',
+                company_id,
+                active,
+            )
         except LinthrApiError as exc:
+            logger.exception(
+                'Company active toggle failed - company_id=%s active=%s - %s',
+                company_id,
+                active,
+                exc,
+            )
             status_code = exc.status_code or 502
             return JsonResponse(
                 {'success': False, 'message': str(exc)},
@@ -400,6 +431,7 @@ class CompanyDetailView(AdminSessionRequiredMixin, View):
         week = request.GET.get('week') or 'this'
         if week not in ('this', 'last'):
             week = 'this'
+        logger.debug('Company detail GET - company_id=%s week=%s', company_id, week)
         client = LinthrApiClient()
         company = None
         stats = None
@@ -424,6 +456,7 @@ class CompanyDetailView(AdminSessionRequiredMixin, View):
             )
             if not company:
                 error = 'Company not found.'
+                logger.debug('Company detail - company not found company_id=%s', company_id)
                 messages.error(request, error)
             else:
                 stats = client.get_dashboard(week=week, company_id=company_id)
@@ -433,6 +466,11 @@ class CompanyDetailView(AdminSessionRequiredMixin, View):
                         **(client.get_company_profile(company_id) or {}),
                     }
                 except LinthrApiError as profile_exc:
+                    logger.exception(
+                        'Company profile load failed - company_id=%s - %s',
+                        company_id,
+                        profile_exc,
+                    )
                     messages.warning(
                         request,
                         f'Company profile details could not be loaded: {profile_exc}',
@@ -474,7 +512,12 @@ class CompanyDetailView(AdminSessionRequiredMixin, View):
                             'active_pct': round((active / total) * 100) if total else 0,
                             'inactive_pct': round((inactive / total) * 100) if total else 0,
                         }
-                except LinthrApiError:
+                except LinthrApiError as emp_exc:
+                    logger.exception(
+                        'Company employee stats failed - company_id=%s - %s',
+                        company_id,
+                        emp_exc,
+                    )
                     if stats:
                         total = int(stats.get('total_employees') or 0)
                         people = {
@@ -484,7 +527,13 @@ class CompanyDetailView(AdminSessionRequiredMixin, View):
                             'active_pct': 100 if total else 0,
                             'inactive_pct': 0,
                         }
+            logger.debug(
+                'Company detail loaded - company_id=%s people_total=%s',
+                company_id,
+                people.get('total'),
+            )
         except LinthrApiError as exc:
+            logger.exception('Company detail failed - company_id=%s - %s', company_id, exc)
             error = str(exc)
             messages.error(request, f'Unable to load company: {exc}')
         return render(
